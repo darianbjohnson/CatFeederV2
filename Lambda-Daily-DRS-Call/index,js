@@ -1,0 +1,78 @@
+var aws = require('aws-sdk');  
+var ddb = new aws.DynamoDB();
+
+exports.handler = (event, context, callback) => {
+    
+    //var api_call = "event.api_call";
+    //var api_call = 
+
+    var userID = event.UserID; //"amzn1.ask.account.AGUJFJCPSTGHJWFYA44CRPVQ3DUKHQKOVTYVNAFBG624T3XLTRGBEICUKNEKQZLJUPXPUXDS2OTWE2WR3452N3ZVUTBI2TNHDCFJU6B4XHJCFJVB5A3W5J2H2PQP2744ETQYRTYJIH3AXYC3GLULEYF5MWNRQJZNJE3KWDG6AGVBQNRYDHWPDBNOYSJWRME57QZ4QM564NRLJMY";
+    var client_id = 'amzn1.application-oa2-client.584f44d4029e48bebbee6a36fa0f449c';
+    var client_secret = '41f251cc4795556d986412a4d3d05e61a40bffd80c1e13b21fa6c5c5ace70874';
+
+    var docClient = new aws.DynamoDB.DocumentClient();
+	
+	var params = {
+		TableName: "Cat_Feeder_Config",
+		KeyConditionExpression: "UserId = :userID",
+		ExpressionAttributeValues: {
+			":userID": userID
+		},
+		ScanIndexForward: false
+	};
+	
+	docClient.query(params, function(err, data) {
+    	if (err){
+    		console.log(JSON.stringify(err, null, 2));
+    		callback(null, 'There was an error calling the function.');
+    	}else{
+    		
+    		var recordcount = data.Items.length;
+
+    		if (recordcount>0){
+    		    var getReq;
+    		    var options;
+    			data.Items.forEach(function(item) {
+
+                    var access_token = item.Access_Token;
+    			    var refresh_token = item.Refresh_Token;
+    			    
+                    var TokenProvider = require('refresh-token');
+                    
+                    var tokenProvider = new TokenProvider('https://api.amazon.com/auth/o2/token', {
+                        refresh_token: refresh_token, 
+                        client_id:     client_id, 
+                        client_secret: client_secret
+                        /* you can pass an access token optionally
+                        access_token:  'fdlaksd',
+                        expires_in:    2133
+                        */
+                    });
+                    
+                    tokenProvider.getToken(function (err, token) {
+                        
+                        if (api_call == 'SlotStatus'){
+                            
+                            
+                            
+                        }
+                        
+                    //token will be a valid access token. 
+                        console.log(token);
+                        console.log(err);
+                        callback(null,"success");
+                    });
+					
+					
+    			    
+    			});	   
+
+    		}else{
+    		    console.log('here not in count');
+    		    callback(null, 'The entered code (topic_id) was not found, can you please try again?');
+    		}
+    	}
+
+    });
+
+};
